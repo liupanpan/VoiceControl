@@ -18,13 +18,36 @@
 #include "SpeechApiSample.h"
 #include <unistd.h>
 #include <signal.h> 
+#include <pthread.h>
 
 static void my_handler(int sig){ // can be called asynchronously  
 	printf("^^^^^^^^^^^^^^^\n");
 }  
 
-int main(int argc, const char* argv[]) {
+void * func1(void *arg)
+{
+	int num=*(int *)arg;
+	
+	printf("create play thread>>>>>>>>>>>>>\n");
+	
+	system("mplayer musicdemo.wav");
 
+	return NULL;
+}
+
+void * func2(void *arg)
+{
+        int num=*(int *)arg;
+	
+	printf("create stop thread>>>>>>>>>>>>>\n");
+        system("");
+
+        return NULL;
+}
+
+int main(int argc, const char* argv[]) {
+	pthread_t thr1, thr2;
+	int a = 1, b = 2;
 	if (argc < 5) {
 		cout << endl<<endl << "[Error] Missing argv! " << endl << "Usage:" << endl
 			<< " - argv[1]: api_url" << endl
@@ -73,13 +96,19 @@ int main(int argc, const char* argv[]) {
 				usleep(2000000); /* sleep 2 second */
 			}
 			else if (responseString.find("开始") != string::npos) {
-				printf(">>>>>>>>>>>>>\n");
-				//system("aplay musicdemo.wav");	
+				if(pthread_create(&thr1,NULL,func1,&a)!=0)
+    				{
+        				printf("create play thread failed!\n");
+        				return 0;
+    				}
 				break;
 			} 
 			else if (responseString.find("停止") != string::npos) {
-				printf("<<<<<<<<<<<<\n");
-				//signal(SIGINT, my_handler);  
+				if(pthread_create(&thr2,NULL,func2,&b)!=0)
+    				{
+        				printf("create thread failed!\n");
+        				return 0;
+    				}
 				break;
 			}
 			else {
